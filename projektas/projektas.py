@@ -72,34 +72,67 @@ def isApproximatePosition(source, dest, error):
 def isApproximateRotation(source, dest, error):
     return abs(source - dest) < error
 
-def rotateUntil(client, robot, leftMotor, rightMotor, angle):
+def normalizeAngle(angle):
+    if (angle < 0):
+        return angle + 2 * np.pi
+    else:
+        return angle
+
+def rotateUntilAngle(client, robot, leftMotor, rightMotor, angle, speed = 0.2):
     rot = getRotation(client, robot)
-    print('Current rotation: ' + str(rot[2]) + '\nDesired rotation: ' + str(angle))
-    if angle < rot[2]:
+
+    # Decide which direction to turn
+    willTurnLeft = True
+    normAngle = normalizeAngle(angle)
+    normRot = normalizeAngle(rot[2])
+    if normAngle > normRot:
+        diff = normAngle - normRot
+        if diff > np.pi:
+            willTurnLeft = False
+    else:
+        diff = normRot - normAngle
+        if diff < np.pi:
+            willTurnLeft = False
+
+    if willTurnLeft:
         while not isApproximateRotation(rot[2], angle, 0.01):
-            turnLeft(client, leftMotor, rightMotor, 0.2)
+            turnLeft(client, leftMotor, rightMotor, speed)
             rot = getRotation(client, robot)
-    elif angle > rot[2]:
+    else:
         while not isApproximateRotation(rot[2], angle, 0.01):
-            turnRight(client, leftMotor, rightMotor, 0.2)
+            turnRight(client, leftMotor, rightMotor, speed)
             rot = getRotation(client, robot)
+
     stop(client, leftMotor, rightMotor)
 
 def getDesiredRotation(source, target):
-    return np.arctan2(target[1] - source[1], target[0] - source[1])
+    return np.arctan2(target[1] - source[1], target[0] - source[0])
+
+def rotateTowards(client, robot, leftMotor, rightMotor, destinationHandle):
+    destPos = getPosition(client, destinationHandle)
+    # Repeat rotation 3 times for better accuracy
+    # Because the center of the robot changes when rotating
+    for i in range(3):
+        if (i == 0):
+            speed = 1.5
+        else:
+            speed = 0.2
+        robPos = getPosition(client, robot)
+        desAngle = getDesiredRotation(robPos, destPos)
+        rotateUntilAngle(client, robot, leftMotor, rightMotor, desAngle, speed)
 
 def bug0(client, robot, leftMotor, rightMotor, sensors):
+    print('BUG0 - started.')
     destHandle = getHandle(client, 'destination1')
     destPos = getPosition(client, destHandle)
     robPos = getPosition(client, robot)
-    
-    desAngle = getDesiredRotation(robPos, destPos)
-    rotateUntil(client, robot, leftMotor, rightMotor, desAngle)
+    rotateTowards(client, robot, leftMotor, rightMotor, destHandle)
 
     while not isApproximatePosition(robPos, destPos, 0.2):
         moveForward(client, leftMotor, rightMotor, 1)
         robPos = getPosition(client, robot)
     stop(client, leftMotor, rightMotor)
+    print('BUG0 - destination reached!')
 
 def main():
     clientID = connect()
@@ -109,7 +142,12 @@ def main():
     sensors = []
     for i in range(16):
         sensor = getHandle(clientID, 'Pioneer_p3dx_ultrasonicSensor' + str(i + 1))
-    
+    stop(clientID, leftMotor, rightMotor)
+
+    #turnLeft(clientID, leftMotor, rightMotor, 0.3)
+    #while True:
+    #    print(getRotation(clientID, robot))
+
     bug0(clientID, robot, leftMotor, rightMotor, sensors)
     stop(clientID, leftMotor, rightMotor)
     disconnect(clientID)

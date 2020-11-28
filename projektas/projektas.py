@@ -62,6 +62,14 @@ def getRotation(client, handle):
     retVal, rot = sim.simxGetObjectOrientation(client, handle, -1, sim.simx_opmode_oneshot_wait)
     return rot
 
+def getDistanceFromSensor(client, sensor):
+    return_code, detection_state, detected_point, detected_object_handle, detected_surface_normal_vector = sim.simxReadProximitySensor(client, sensor, sim.simx_opmode_oneshot_wait)
+    if detection_state:
+        dist = np.sqrt(np.power(detected_point[0], 2) + np.power(detected_point[1], 2))
+    else:
+        dist = np.inf
+    return dist
+
 def isApproximatePosition(source, dest, error):
     retVal = True;
     retVal = retVal & (abs(source[0] - dest[0]) < error)
@@ -129,6 +137,34 @@ def bug0(client, robot, leftMotor, rightMotor, sensors):
     rotateTowards(client, robot, leftMotor, rightMotor, destHandle)
 
     while not isApproximatePosition(robPos, destPos, 0.2):
+        dist1 = getDistanceFromSensor(client, sensors[3])
+        dist2 = getDistanceFromSensor(client, sensors[4])
+        print(str(dist1) + ' ' + str(dist2))
+        if dist1 < 0.15 or dist2 < 0.15:
+            # rotate left
+            prevDist1 = np.inf
+            prevDist2 = np.inf
+            sensDist1 = getDistanceFromSensor(client, sensors[7])
+            sensDist2 = getDistanceFromSensor(client, sensors[8])
+            
+            print('rotating left')
+            while sensDist2 == np.inf or (sensDist1 < prevDist1 and sensDist2 < prevDist2):
+                turnLeft(client, leftMotor, rightMotor, 0.5)
+                prevDist1 = sensDist1
+                sensDist1 = getDistanceFromSensor(client, sensors[7])
+                prevDist2 = sensDist2
+                sensDist2 = getDistanceFromSensor(client, sensors[8])
+                #print(str(prevDist) + ' ' + str(sensDist))
+            # move until no obstacle
+            print('moving until no obstacle')
+            while sensDist1 != np.inf and sensDist2 != np.inf:
+                moveForward(client, leftMotor, rightMotor, 1)
+                sensDist1 = getDistanceFromSensor(client, sensors[7])
+                sensDist2 = getDistanceFromSensor(client, sensors[8])
+            stop(client, leftMotor, rightMotor)
+            # rotate towards target
+            print('rotating towards target')
+            rotateTowards(client, robot, leftMotor, rightMotor, destHandle)
         moveForward(client, leftMotor, rightMotor, 1)
         robPos = getPosition(client, robot)
     stop(client, leftMotor, rightMotor)
@@ -142,13 +178,11 @@ def main():
     sensors = []
     for i in range(16):
         sensor = getHandle(clientID, 'Pioneer_p3dx_ultrasonicSensor' + str(i + 1))
+        sensors.append(sensor)
     stop(clientID, leftMotor, rightMotor)
 
-    #turnLeft(clientID, leftMotor, rightMotor, 0.3)
-    #while True:
-    #    print(getRotation(clientID, robot))
-
     bug0(clientID, robot, leftMotor, rightMotor, sensors)
+
     stop(clientID, leftMotor, rightMotor)
     disconnect(clientID)
 

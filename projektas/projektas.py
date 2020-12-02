@@ -191,6 +191,71 @@ def bug0(client, robot, leftMotor, rightMotor, sensors):
     print('BUG0 - destination reached!')
 
 
+def turn90Degrees(client, leftMotor, rightMotor, direction, turnFor=13.26, speed=0.2):
+    time_end = time.time() + turnFor;
+
+    while time.time() < time_end:
+        if direction == 'right':
+            retLeft = sim.simxSetJointTargetVelocity(client, leftMotor, speed, sim.simx_opmode_streaming)
+            retRight = sim.simxSetJointTargetVelocity(client, rightMotor, -speed, sim.simx_opmode_streaming)
+        else:
+            retLeft = sim.simxSetJointTargetVelocity(client, leftMotor, -speed, sim.simx_opmode_streaming)
+            retRight = sim.simxSetJointTargetVelocity(client, rightMotor, speed, sim.simx_opmode_streaming)
+
+
+def moveForwardFor(client, leftMotor, rightMotor, speed, moveFor):
+    time_end = time.time() + moveFor;
+    while time.time() < time_end:
+        moveForward(client, leftMotor, rightMotor, speed)
+
+
+def maze(client, robot, leftMotor, rightMotor, frontSensor, rightSensor, leftSensor):
+    print('Maze by right hand rule - started')
+
+    destHandle = getHandle(client, 'destination2')
+    robPos = getPosition(client, robot)
+    destPos = getPosition(client, destHandle)
+
+    while not isApproximatePosition(robPos, destPos, 0.2):
+        distanceFront = getDistanceFromSensor(client, frontSensor)
+        distanceRight = getDistanceFromSensor(client, rightSensor)
+        distanceLeft = getDistanceFromSensor(client, leftSensor)
+
+        moveForwardFor(client, leftMotor, rightMotor, 1, 1)
+
+        # kartais arteja prie deisnes sienos ir desinysis sensorius rodo, kad atstumas dideja???
+        print(distanceRight)
+        if distanceRight != np.inf:
+            if distanceRight > 0.01:
+
+                turnRight(client, leftMotor, rightMotor, 0.5)
+            else:
+                turnLeft(client, leftMotor, rightMotor, 0.5)
+
+        if distanceFront < 0.05:
+            print('Wall infront')
+            stop(client, leftMotor, rightMotor)
+
+            if distanceRight == np.inf:
+                print('No wall on the right - turning 90 degrees right')
+                turn90Degrees(client, leftMotor, rightMotor, 'right', 13.26)
+            elif distanceLeft == np.inf:
+                print('No wall on the left - turning 90 degrees left')
+                turn90Degrees(client, leftMotor, rightMotor, 'left', 13.26)
+            else:
+                print('Cannot turn right or left - turning around')
+                turn90Degrees(client, leftMotor, rightMotor, 'left', 26.52)
+
+        if distanceRight == np.inf:
+            print('I can go right')
+            print('Moving forward to clear wall on right')
+            moveForwardFor(client, leftMotor, rightMotor, 1, 4)
+            turn90Degrees(client, leftMotor, rightMotor, 'right')
+            moveForwardFor(client, leftMotor, rightMotor, 1, 4)
+
+    print('Maze completed')
+
+
 def main():
     clientID = connect()
     robot = getHandle(clientID, 'Pioneer_p3dx')
@@ -208,5 +273,18 @@ def main():
     disconnect(clientID)
 
 
+def mazetest():
+    clientID = connect()
+    robot = getHandle(clientID, 'Pioneer_p3dx_mazetest')
+    leftMotor = getHandle(clientID, 'Pioneer_p3dx_leftMotor#0')
+    rightMotor = getHandle(clientID, 'Pioneer_p3dx_rightMotor#0')
+    frontSensor = getHandle(clientID, 'Pioneer_p3dx_ultrasonicSensor5#0')
+    rightSensor = getHandle(clientID, 'Pioneer_p3dx_ultrasonicSensor8#0')
+    leftSensor = getHandle(clientID, 'Pioneer_p3dx_ultrasonicSensor1#0')
+
+    maze(clientID, robot, leftMotor, rightMotor, frontSensor, rightSensor, leftSensor)
+
+
 if __name__ == "__main__":
-    main()
+    #main()
+    mazetest()

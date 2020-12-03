@@ -48,14 +48,14 @@ def moveBackwards(client, leftMotor, rightMotor, speed):
 
 
 def turnLeft(client, leftMotor, rightMotor, speed):
-    retLeft = sim.simxSetJointTargetVelocity(client, leftMotor, 0, sim.simx_opmode_streaming)
+    retLeft = sim.simxSetJointTargetVelocity(client, leftMotor, -speed, sim.simx_opmode_streaming)
     retRight = sim.simxSetJointTargetVelocity(client, rightMotor, speed, sim.simx_opmode_streaming)
     return retLeft | retRight
 
 
 def turnRight(client, leftMotor, rightMotor, speed):
     retLeft = sim.simxSetJointTargetVelocity(client, leftMotor, speed, sim.simx_opmode_streaming)
-    retRight = sim.simxSetJointTargetVelocity(client, rightMotor, 0, sim.simx_opmode_streaming)
+    retRight = sim.simxSetJointTargetVelocity(client, rightMotor, -speed, sim.simx_opmode_streaming)
     return retLeft | retRight
 
 
@@ -88,7 +88,8 @@ def isApproximatePosition(source, dest, error):
     retVal = True;
     retVal = retVal & (abs(source[0] - dest[0]) < error)
     retVal = retVal & (abs(source[1] - dest[1]) < error)
-    retVal = retVal & (abs(source[2] - dest[2]) < error)
+    # We only care about XY surface position
+    #retVal = retVal & (abs(source[2] - dest[2]) < error)
     return retVal
 
 
@@ -102,8 +103,7 @@ def normalizeAngle(angle):
     else:
         return angle
 
-
-def rotateUntilAngle(client, robot, leftMotor, rightMotor, angle, speed = 0.2):
+def rotateUntilAngle(client, robot, leftMotor, rightMotor, angle, speed = 0.2, error = 0.01):
     rot = getRotation(client, robot)
 
     # Decide which direction to turn
@@ -120,11 +120,11 @@ def rotateUntilAngle(client, robot, leftMotor, rightMotor, angle, speed = 0.2):
             willTurnLeft = False
 
     if willTurnLeft:
-        while not isApproximateRotation(rot[2], angle, 0.01):
+        while not isApproximateRotation(rot[2], angle, error):
             turnLeft(client, leftMotor, rightMotor, speed)
             rot = getRotation(client, robot)
     else:
-        while not isApproximateRotation(rot[2], angle, 0.01):
+        while not isApproximateRotation(rot[2], angle, error):
             turnRight(client, leftMotor, rightMotor, speed)
             rot = getRotation(client, robot)
 
@@ -142,11 +142,13 @@ def rotateTowards(client, robot, leftMotor, rightMotor, destinationHandle):
     for i in range(3):
         if (i == 0):
             speed = 1.5
+            error = 0.1
         else:
             speed = 0.2
+            error = 0.01
         robPos = getPosition(client, robot)
         desAngle = getDesiredRotation(robPos, destPos)
-        rotateUntilAngle(client, robot, leftMotor, rightMotor, desAngle, speed)
+        rotateUntilAngle(client, robot, leftMotor, rightMotor, desAngle, speed, error)
 
 
 def bug0(client, robot, leftMotor, rightMotor, sensors):
@@ -160,7 +162,7 @@ def bug0(client, robot, leftMotor, rightMotor, sensors):
         dist1 = getDistanceFromSensor(client, sensors[3])
         dist2 = getDistanceFromSensor(client, sensors[4])
         print(str(dist1) + ' ' + str(dist2))
-        if dist1 < 0.15 or dist2 < 0.15:
+        if dist1 < 0.1 or dist2 < 0.1:
             # rotate left
             prevDist1 = np.inf
             prevDist2 = np.inf
@@ -177,7 +179,7 @@ def bug0(client, robot, leftMotor, rightMotor, sensors):
                 #print(str(prevDist) + ' ' + str(sensDist))
             # move until no obstacle
             print('moving until no obstacle')
-            while sensDist1 != np.inf and sensDist2 != np.inf:
+            while sensDist1 != np.inf or sensDist2 != np.inf:
                 moveForward(client, leftMotor, rightMotor, 1)
                 sensDist1 = getDistanceFromSensor(client, sensors[7])
                 sensDist2 = getDistanceFromSensor(client, sensors[8])
@@ -206,6 +208,24 @@ def turn90Degrees(client, leftMotor, rightMotor, direction, speed=3):
         '''
     stop(client, leftMotor, rightMotor)
 
+def correctAngle(angle):
+    if (angle > np.pi):
+        return angle - 2 * np.pi
+    elif (angle < -np.pi):
+        return angle + 2 * np.pi
+    else:
+        return angle
+
+def turn90Degrees(client, robot, leftMotor, rightMotor, direction, speed = 0.2):
+    stop(client, leftMotor, rightMotor)
+    rot = getRotation(client, robot)
+    if direction == 'right':
+        desRot = correctAngle(rot[2] + (np.pi / 2))
+        rotateUntilAngle(client, robot, leftMotor, rightMotor, desRot, speed)
+    elif direction == 'left':
+        desRot = correctAngle(rot[2] - (np.pi / 2))
+        rotateUntilAngle(client, robot, leftMotor, rightMotor, desRot, speed)
+    stop(client, leftMotor, rightMotor)
 
 def moveForwardFor(client, leftMotor, rightMotor, speed, moveFor):
     time_end = time.time() + moveFor;
@@ -267,6 +287,21 @@ def main():
 
     bug0(clientID, robot, leftMotor, rightMotor, sensors)
 
+    ##
+    ##  90 deg rotation test
+    ##
+    print(getRotation(clientID, robot))
+    until = time.time() + 5
+    while time.time() < until:
+        continue
+    turn90Degrees(clientID, robot, leftMotor, rightMotor, 'right', 0.2)
+    until = time.time() + 5
+    while time.time() < until:
+        continue
+    turn90Degrees(clientID, robot, leftMotor, rightMotor, 'left', 0.2)
+    print(getRotation(clientID, robot))
+
+
     stop(clientID, leftMotor, rightMotor)
     disconnect(clientID)
 
@@ -282,7 +317,6 @@ def mazetest():
 
     maze(clientID, robot, leftMotor, rightMotor, frontSensor, rightSensor, leftSensor)
 
-
 if __name__ == "__main__":
-    #main()
-    mazetest()
+    main()
+    #mazetest()

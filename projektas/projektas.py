@@ -191,16 +191,20 @@ def bug0(client, robot, leftMotor, rightMotor, sensors):
     print('BUG0 - destination reached!')
 
 
-def turn90Degrees(client, leftMotor, rightMotor, direction, turnFor=13.26, speed=0.2):
-    time_end = time.time() + turnFor;
-
-    while time.time() < time_end:
-        if direction == 'right':
-            retLeft = sim.simxSetJointTargetVelocity(client, leftMotor, speed, sim.simx_opmode_streaming)
-            retRight = sim.simxSetJointTargetVelocity(client, rightMotor, -speed, sim.simx_opmode_streaming)
-        else:
-            retLeft = sim.simxSetJointTargetVelocity(client, leftMotor, -speed, sim.simx_opmode_streaming)
-            retRight = sim.simxSetJointTargetVelocity(client, rightMotor, speed, sim.simx_opmode_streaming)
+def turn90Degrees(client, leftMotor, rightMotor, direction, speed=3):
+    if direction == 'right':
+        '''
+        for i in range(40000):
+            sim.simxSetJointTargetVelocity(client, leftMotor, speed, sim.simx_opmode_streaming)
+            sim.simxSetJointTargetVelocity(client, rightMotor, -speed, sim.simx_opmode_streaming)
+        '''
+    else:
+        '''
+        for i in range(40000):
+            sim.simxSetJointTargetVelocity(client, leftMotor, -speed, sim.simx_opmode_streaming)
+            sim.simxSetJointTargetVelocity(client, rightMotor, speed, sim.simx_opmode_streaming)
+        '''
+    stop(client, leftMotor, rightMotor)
 
 
 def moveForwardFor(client, leftMotor, rightMotor, speed, moveFor):
@@ -212,6 +216,8 @@ def moveForwardFor(client, leftMotor, rightMotor, speed, moveFor):
 def maze(client, robot, leftMotor, rightMotor, frontSensor, rightSensor, leftSensor):
     print('Maze by right hand rule - started')
 
+    stop(client, leftMotor, rightMotor)
+
     destHandle = getHandle(client, 'destination2')
     robPos = getPosition(client, robot)
     destPos = getPosition(client, destHandle)
@@ -221,34 +227,26 @@ def maze(client, robot, leftMotor, rightMotor, frontSensor, rightSensor, leftSen
         distanceRight = getDistanceFromSensor(client, rightSensor)
         distanceLeft = getDistanceFromSensor(client, leftSensor)
 
-        moveForwardFor(client, leftMotor, rightMotor, 1, 1)
+        moveForward(client, leftMotor, rightMotor, 2)
 
-        # kartais arteja prie deisnes sienos ir desinysis sensorius rodo, kad atstumas dideja???
-        print(distanceRight)
-        if distanceRight != np.inf:
-            if distanceRight > 0.01:
-
-                turnRight(client, leftMotor, rightMotor, 0.5)
-            else:
-                turnLeft(client, leftMotor, rightMotor, 0.5)
-
-        if distanceFront < 0.05:
+        if distanceFront < 0.06:
             print('Wall infront')
             stop(client, leftMotor, rightMotor)
 
             if distanceRight == np.inf:
                 print('No wall on the right - turning 90 degrees right')
-                turn90Degrees(client, leftMotor, rightMotor, 'right', 13.26)
+                turn90Degrees(client, leftMotor, rightMotor, 'right')
             elif distanceLeft == np.inf:
                 print('No wall on the left - turning 90 degrees left')
-                turn90Degrees(client, leftMotor, rightMotor, 'left', 13.26)
+                turn90Degrees(client, leftMotor, rightMotor, 'left')
             else:
                 print('Cannot turn right or left - turning around')
-                turn90Degrees(client, leftMotor, rightMotor, 'left', 26.52)
+                turn90Degrees(client, leftMotor, rightMotor, 'left')
+                turn90Degrees(client, leftMotor, rightMotor, 'left')
 
         if distanceRight == np.inf:
             print('I can go right')
-            print('Moving forward to clear wall on right')
+            stop(client, leftMotor, rightMotor)
             moveForwardFor(client, leftMotor, rightMotor, 1, 4)
             turn90Degrees(client, leftMotor, rightMotor, 'right')
             moveForwardFor(client, leftMotor, rightMotor, 1, 4)

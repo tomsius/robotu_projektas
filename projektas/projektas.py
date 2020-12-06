@@ -200,21 +200,6 @@ def bug0(client, robot, leftMotor, rightMotor, sensors):
     print('BUG0 - destination reached!')
 
 
-def turn90Degrees(client, leftMotor, rightMotor, direction, speed=3):
-    if direction == 'right':
-        '''
-        for i in range(40000):
-            sim.simxSetJointTargetVelocity(client, leftMotor, speed, sim.simx_opmode_streaming)
-            sim.simxSetJointTargetVelocity(client, rightMotor, -speed, sim.simx_opmode_streaming)
-        '''
-    else:
-        '''
-        for i in range(40000):
-            sim.simxSetJointTargetVelocity(client, leftMotor, -speed, sim.simx_opmode_streaming)
-            sim.simxSetJointTargetVelocity(client, rightMotor, speed, sim.simx_opmode_streaming)
-        '''
-    stop(client, leftMotor, rightMotor)
-
 def correctAngle(angle):
     if (angle > np.pi):
         return angle - 2 * np.pi
@@ -227,10 +212,10 @@ def turn90Degrees(client, robot, leftMotor, rightMotor, direction, speed = 0.2):
     stop(client, leftMotor, rightMotor)
     rot = getRotation(client, robot)
     if direction == 'right':
-        desRot = correctAngle(rot[2] + (np.pi / 2))
+        desRot = correctAngle(rot[2] + (np.pi / 2)) #- 0.01
         rotateUntilAngle(client, robot, leftMotor, rightMotor, desRot, speed)
     elif direction == 'left':
-        desRot = correctAngle(rot[2] - (np.pi / 2))
+        desRot = correctAngle(rot[2] - (np.pi / 2)) #- 0.01
         rotateUntilAngle(client, robot, leftMotor, rightMotor, desRot, speed)
     stop(client, leftMotor, rightMotor)
 
@@ -262,21 +247,21 @@ def maze(client, robot, leftMotor, rightMotor, frontSensor, rightSensor, leftSen
 
             if distanceRight == np.inf:
                 print('No wall on the right - turning 90 degrees right')
-                turn90Degrees(client, leftMotor, rightMotor, 'right')
+                turn90Degrees(client, robot, leftMotor, rightMotor, 'left')
             elif distanceLeft == np.inf:
                 print('No wall on the left - turning 90 degrees left')
-                turn90Degrees(client, leftMotor, rightMotor, 'left')
+                turn90Degrees(client, robot, leftMotor, rightMotor, 'right')
             else:
                 print('Cannot turn right or left - turning around')
-                turn90Degrees(client, leftMotor, rightMotor, 'left')
-                turn90Degrees(client, leftMotor, rightMotor, 'left')
+                turn90Degrees(client, robot, leftMotor, rightMotor, 'left')
+                turn90Degrees(client, robot, leftMotor, rightMotor, 'left')
 
         if distanceRight == np.inf:
             print('I can go right')
             stop(client, leftMotor, rightMotor)
             moveForwardFor(client, leftMotor, rightMotor, 1, 4)
-            turn90Degrees(client, leftMotor, rightMotor, 'right')
-            moveForwardFor(client, leftMotor, rightMotor, 1, 4)
+            turn90Degrees(client, robot, leftMotor, rightMotor, 'left')
+            moveForwardFor(client, leftMotor, rightMotor, 1, 5)
 
     print('Maze completed')
 

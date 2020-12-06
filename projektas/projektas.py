@@ -161,8 +161,8 @@ def bug0(client, robot, leftMotor, rightMotor, sensors):
     while not isApproximatePosition(robPos, destPos, 0.2):
         dist1 = getDistanceFromSensor(client, sensors[3])
         dist2 = getDistanceFromSensor(client, sensors[4])
-        print(str(dist1) + ' ' + str(dist2))
-        if dist1 < 0.1 or dist2 < 0.1:
+        #print(str(dist1) + ' ' + str(dist2))
+        if dist1 < 0.1 and dist2 < 0.1:
             # rotate left
             prevDist1 = np.inf
             prevDist2 = np.inf
@@ -170,12 +170,19 @@ def bug0(client, robot, leftMotor, rightMotor, sensors):
             sensDist2 = getDistanceFromSensor(client, sensors[8])
             
             print('rotating left')
-            while sensDist2 == np.inf or (sensDist1 < prevDist1 and sensDist2 < prevDist2):
-                turnLeft(client, leftMotor, rightMotor, 0.5)
+            diff = np.abs(sensDist1 - sensDist2)
+            #print(str(diff))
+            #print(str(sensDist1) + ' ' + str(sensDist2))
+            #while sensDist2 == np.inf or sensDist1 < prevDist1:
+            while diff > 0.0003 or sensDist1 == np.inf or sensDist2 == np.inf:
+                turnLeft(client, leftMotor, rightMotor, 0.2)
                 prevDist1 = sensDist1
                 sensDist1 = getDistanceFromSensor(client, sensors[7])
                 prevDist2 = sensDist2
                 sensDist2 = getDistanceFromSensor(client, sensors[8])
+                diff = np.abs(sensDist1 - sensDist2)
+                #print(str(diff))
+                #print(str(sensDist1) + ' ' + str(sensDist2))
                 #print(str(prevDist) + ' ' + str(sensDist))
             # move until no obstacle
             print('moving until no obstacle')

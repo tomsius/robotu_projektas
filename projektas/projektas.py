@@ -212,10 +212,10 @@ def turn90Degrees(client, robot, leftMotor, rightMotor, direction, speed = 0.2):
     stop(client, leftMotor, rightMotor)
     rot = getRotation(client, robot)
     if direction == 'right':
-        desRot = correctAngle(rot[2] + (np.pi / 2)) #- 0.01
+        desRot = correctAngle(rot[2] + (np.pi / 2))
         rotateUntilAngle(client, robot, leftMotor, rightMotor, desRot, speed)
     elif direction == 'left':
-        desRot = correctAngle(rot[2] - (np.pi / 2)) #- 0.01
+        desRot = correctAngle(rot[2] - (np.pi / 2))
         rotateUntilAngle(client, robot, leftMotor, rightMotor, desRot, speed)
     stop(client, leftMotor, rightMotor)
 
@@ -259,9 +259,9 @@ def maze(client, robot, leftMotor, rightMotor, frontSensor, rightSensor, leftSen
         if distanceRight == np.inf:
             print('I can go right')
             stop(client, leftMotor, rightMotor)
-            moveForwardFor(client, leftMotor, rightMotor, 1, 4)
-            turn90Degrees(client, robot, leftMotor, rightMotor, 'left')
-            moveForwardFor(client, leftMotor, rightMotor, 1, 5)
+            moveForwardFor(client, leftMotor, rightMotor, 2, 2)
+            turn90Degrees(client, robot, leftMotor, rightMotor, 'left', 0.5)
+            moveForwardFor(client, leftMotor, rightMotor, 2, 2.5)
 
     print('Maze completed')
 

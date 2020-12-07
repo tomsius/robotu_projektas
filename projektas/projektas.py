@@ -7,7 +7,6 @@ import matplotlib.pyplot as plt
 
 def connect():
     sim.simxFinish(-1)
-    #clientID = sim.simxStart('127.0.0.1', 19999, True, True, 5000, 5)
     clientID = sim.simxStart('127.0.0.1', 19997, True, True, 5000, 5)
     if clientID != -1:
         print('Connected to remote API server')
@@ -86,10 +85,9 @@ def getDistanceFromSensor(client, sensor):
 
 def isApproximatePosition(source, dest, error):
     retVal = True;
+    # We only care about XY surface position
     retVal = retVal & (abs(source[0] - dest[0]) < error)
     retVal = retVal & (abs(source[1] - dest[1]) < error)
-    # We only care about XY surface position
-    #retVal = retVal & (abs(source[2] - dest[2]) < error)
     return retVal
 
 
@@ -103,9 +101,9 @@ def normalizeAngle(angle):
     else:
         return angle
 
+
 def rotateUntilAngle(client, robot, leftMotor, rightMotor, angle, speed = 0.2, error = 0.01):
     rot = getRotation(client, robot)
-
     # Decide which direction to turn
     willTurnLeft = True
     normAngle = normalizeAngle(angle)
@@ -118,7 +116,6 @@ def rotateUntilAngle(client, robot, leftMotor, rightMotor, angle, speed = 0.2, e
         diff = normRot - normAngle
         if diff < np.pi:
             willTurnLeft = False
-
     if willTurnLeft:
         while not isApproximateRotation(rot[2], angle, error):
             turnLeft(client, leftMotor, rightMotor, speed)
@@ -127,7 +124,6 @@ def rotateUntilAngle(client, robot, leftMotor, rightMotor, angle, speed = 0.2, e
         while not isApproximateRotation(rot[2], angle, error):
             turnRight(client, leftMotor, rightMotor, speed)
             rot = getRotation(client, robot)
-
     stop(client, leftMotor, rightMotor)
 
 
@@ -151,50 +147,74 @@ def rotateTowards(client, robot, leftMotor, rightMotor, destinationHandle):
         rotateUntilAngle(client, robot, leftMotor, rightMotor, desAngle, speed, error)
 
 
-def bug0(client, robot, leftMotor, rightMotor, sensors):
+def moveForwardFor(client, leftMotor, rightMotor, speed, moveFor):
+    time_end = time.time() + moveFor;
+    while time.time() < time_end:
+        moveForward(client, leftMotor, rightMotor, speed)
+
+def wallFollowRHS(client, robot, leftMotor, rightMotor, sensor, speed):
+    dist = getDistanceFromSensor(client, sensor)
+    rotCoords = getRotation(client, robot)
+    rot = normalizeAngle(rotCoords[2])
+    prevRot = 0
+    sumRotDelta = 0
+    deg90 = np.pi / 2
+    halfSpeed = speed / 3
+    leftSpeed = speed
+    rightSpeed = halfSpeed
+    delta = 0
+    prevDist = dist
+    while sumRotDelta > -deg90 and sumRotDelta < deg90:
+        if (dist < 0.08):
+            leftSpeed = halfSpeed
+            rightSpeed = speed
+        elif (dist > 0.1):
+            leftSpeed = speed
+            rightSpeed = halfSpeed
+        move(client, leftMotor, leftSpeed, rightMotor, rightSpeed)
+        dist = getDistanceFromSensor(client, sensor)
+        prevDist = dist
+        rotCoords = getRotation(client, robot)
+        rot = normalizeAngle(rotCoords[2])
+        deltaRot = rot - prevRot
+        prevRot = rot
+        if (deltaRot < 0.1):
+            sumRotDelta = sumRotDelta + deltaRot
+    stop(client, leftMotor, rightMotor)
+
+
+def bug0(client, robot, leftMotor, rightMotor, sensors, minWallDist = 0.15):
     print('BUG0 - started.')
     destHandle = getHandle(client, 'destination1')
+    criticalDist = minWallDist / 3
     destPos = getPosition(client, destHandle)
     robPos = getPosition(client, robot)
     rotateTowards(client, robot, leftMotor, rightMotor, destHandle)
-
-    while not isApproximatePosition(robPos, destPos, 0.2):
+    while not isApproximatePosition(robPos, destPos, 0.05):
         dist1 = getDistanceFromSensor(client, sensors[3])
         dist2 = getDistanceFromSensor(client, sensors[4])
-        #print(str(dist1) + ' ' + str(dist2))
-        if dist1 < 0.1 and dist2 < 0.1:
+        if (dist1 < minWallDist and dist2 < minWallDist) or dist1 < criticalDist or dist2 < criticalDist:
             # rotate left
             prevDist1 = np.inf
             prevDist2 = np.inf
             sensDist1 = getDistanceFromSensor(client, sensors[7])
             sensDist2 = getDistanceFromSensor(client, sensors[8])
-            
             print('rotating left')
             diff = np.abs(sensDist1 - sensDist2)
-            #print(str(diff))
-            #print(str(sensDist1) + ' ' + str(sensDist2))
-            #while sensDist2 == np.inf or sensDist1 < prevDist1:
-            while diff > 0.0003 or sensDist1 == np.inf or sensDist2 == np.inf:
-                turnLeft(client, leftMotor, rightMotor, 0.2)
+            while sensDist2 == np.inf or sensDist1 < prevDist1 or sensDist2 < prevDist2:
+                turnLeft(client, leftMotor, rightMotor, 1)
                 prevDist1 = sensDist1
                 sensDist1 = getDistanceFromSensor(client, sensors[7])
                 prevDist2 = sensDist2
                 sensDist2 = getDistanceFromSensor(client, sensors[8])
                 diff = np.abs(sensDist1 - sensDist2)
-                #print(str(diff))
-                #print(str(sensDist1) + ' ' + str(sensDist2))
-                #print(str(prevDist) + ' ' + str(sensDist))
-            # move until no obstacle
             print('moving until no obstacle')
-            while sensDist1 != np.inf or sensDist2 != np.inf:
-                moveForward(client, leftMotor, rightMotor, 1)
-                sensDist1 = getDistanceFromSensor(client, sensors[7])
-                sensDist2 = getDistanceFromSensor(client, sensors[8])
+            wallFollowRHS(client, robot, leftMotor, rightMotor, sensors[7], 1.5)
             stop(client, leftMotor, rightMotor)
             # rotate towards target
             print('rotating towards target')
             rotateTowards(client, robot, leftMotor, rightMotor, destHandle)
-        moveForward(client, leftMotor, rightMotor, 1)
+        moveForward(client, leftMotor, rightMotor, 1.5)
         robPos = getPosition(client, robot)
     stop(client, leftMotor, rightMotor)
     print('BUG0 - destination reached!')
@@ -208,61 +228,66 @@ def correctAngle(angle):
     else:
         return angle
 
+
+def isApproximate(val1, val2, error = 0.1):
+    return (np.abs(val1 - val2)) < error
+
+
 def turn90Degrees(client, robot, leftMotor, rightMotor, direction, speed = 0.2):
     stop(client, leftMotor, rightMotor)
     rot = getRotation(client, robot)
+    deg90 = np.pi / 2
     if direction == 'right':
-        desRot = correctAngle(rot[2] + (np.pi / 2))
-        rotateUntilAngle(client, robot, leftMotor, rightMotor, desRot, speed)
+        if isApproximate(rot[2], 0):
+            rotateUntilAngle(client, robot, leftMotor, rightMotor, -deg90)
+        elif isApproximate(rot[2], deg90):
+            rotateUntilAngle(client, robot, leftMotor, rightMotor, 0)
+        elif isApproximate(rot[2], -deg90):
+            rotateUntilAngle(client, robot, leftMotor, rightMotor, np.pi)
+        else:
+            rotateUntilAngle(client, robot, leftMotor, rightMotor, deg90)
     elif direction == 'left':
-        desRot = correctAngle(rot[2] - (np.pi / 2))
-        rotateUntilAngle(client, robot, leftMotor, rightMotor, desRot, speed)
-    stop(client, leftMotor, rightMotor)
-
-def moveForwardFor(client, leftMotor, rightMotor, speed, moveFor):
-    time_end = time.time() + moveFor;
-    while time.time() < time_end:
-        moveForward(client, leftMotor, rightMotor, speed)
+        if isApproximate(rot[2], 0):
+            rotateUntilAngle(client, robot, leftMotor, rightMotor, deg90)
+        elif isApproximate(rot[2], deg90):
+            rotateUntilAngle(client, robot, leftMotor, rightMotor, np.pi)
+        elif isApproximate(rot[2], -deg90):
+            rotateUntilAngle(client, robot, leftMotor, rightMotor, 0)
+        else:
+            rotateUntilAngle(client, robot, leftMotor, rightMotor, -deg90)
 
 
 def maze(client, robot, leftMotor, rightMotor, frontSensor, rightSensor, leftSensor):
     print('Maze by right hand rule - started')
-
     stop(client, leftMotor, rightMotor)
-
     destHandle = getHandle(client, 'destination2')
     robPos = getPosition(client, robot)
     destPos = getPosition(client, destHandle)
-
     while not isApproximatePosition(robPos, destPos, 0.2):
         distanceFront = getDistanceFromSensor(client, frontSensor)
         distanceRight = getDistanceFromSensor(client, rightSensor)
         distanceLeft = getDistanceFromSensor(client, leftSensor)
-
         moveForward(client, leftMotor, rightMotor, 2)
-
         if distanceFront < 0.06:
             print('Wall infront')
             stop(client, leftMotor, rightMotor)
-
             if distanceRight == np.inf:
                 print('No wall on the right - turning 90 degrees right')
-                turn90Degrees(client, robot, leftMotor, rightMotor, 'left')
+                turn90Degrees(client, robot, leftMotor, rightMotor, 'right')
             elif distanceLeft == np.inf:
                 print('No wall on the left - turning 90 degrees left')
-                turn90Degrees(client, robot, leftMotor, rightMotor, 'right')
+                turn90Degrees(client, robot, leftMotor, rightMotor, 'left')
             else:
                 print('Cannot turn right or left - turning around')
-                turn90Degrees(client, robot, leftMotor, rightMotor, 'left')
-                turn90Degrees(client, robot, leftMotor, rightMotor, 'left')
-
+                turn90Degrees(client, robot, leftMotor, rightMotor, 'right')
+                turn90Degrees(client, robot, leftMotor, rightMotor, 'right')
         if distanceRight == np.inf:
             print('I can go right')
             stop(client, leftMotor, rightMotor)
             moveForwardFor(client, leftMotor, rightMotor, 2, 2)
-            turn90Degrees(client, robot, leftMotor, rightMotor, 'left', 0.5)
+            turn90Degrees(client, robot, leftMotor, rightMotor, 'right')
             moveForwardFor(client, leftMotor, rightMotor, 2, 2.5)
-
+        robPos = getPosition(client, robot)
     print('Maze completed')
 
 
@@ -276,24 +301,18 @@ def main():
         sensor = getHandle(clientID, 'Pioneer_p3dx_ultrasonicSensor' + str(i + 1))
         sensors.append(sensor)
     stop(clientID, leftMotor, rightMotor)
-
     bug0(clientID, robot, leftMotor, rightMotor, sensors)
-
-    ##
-    ##  90 deg rotation test
-    ##
-    print(getRotation(clientID, robot))
-    until = time.time() + 5
-    while time.time() < until:
-        continue
-    turn90Degrees(clientID, robot, leftMotor, rightMotor, 'right', 0.2)
-    until = time.time() + 5
-    while time.time() < until:
-        continue
-    turn90Degrees(clientID, robot, leftMotor, rightMotor, 'left', 0.2)
-    print(getRotation(clientID, robot))
-
-
+    stop(clientID, leftMotor, rightMotor)
+    rotateUntilAngle(clientID, robot, leftMotor, rightMotor, np.pi, 0.1, 0.005)
+    destPos = [2.5, 8, 0]
+    robPos = getPosition(clientID, robot)
+    while not isApproximatePosition(robPos, destPos, 0.1):
+        moveForward(clientID, leftMotor, rightMotor, 1)
+        robPos = getPosition(clientID, robot)
+    stop(clientID, leftMotor, rightMotor)
+    maze(clientID, robot, leftMotor, rightMotor, sensors[4], sensors[7], sensors[0])
+    stop(clientID, leftMotor, rightMotor)
+    moveForwardFor(clientID, leftMotor, rightMotor, 2, 8)
     stop(clientID, leftMotor, rightMotor)
     disconnect(clientID)
 

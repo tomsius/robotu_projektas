@@ -317,17 +317,5 @@ def main():
     disconnect(clientID)
 
 
-def mazetest():
-    clientID = connect()
-    robot = getHandle(clientID, 'Pioneer_p3dx_mazetest')
-    leftMotor = getHandle(clientID, 'Pioneer_p3dx_leftMotor#0')
-    rightMotor = getHandle(clientID, 'Pioneer_p3dx_rightMotor#0')
-    frontSensor = getHandle(clientID, 'Pioneer_p3dx_ultrasonicSensor5#0')
-    rightSensor = getHandle(clientID, 'Pioneer_p3dx_ultrasonicSensor8#0')
-    leftSensor = getHandle(clientID, 'Pioneer_p3dx_ultrasonicSensor1#0')
-
-    maze(clientID, robot, leftMotor, rightMotor, frontSensor, rightSensor, leftSensor)
-
 if __name__ == "__main__":
     main()
-    #mazetest()

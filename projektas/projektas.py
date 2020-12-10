@@ -5,7 +5,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import math
 
-
+# Connects to the CoppeliaSim remote server
 def connect():
     sim.simxFinish(-1)
     clientID = sim.simxStart('127.0.0.1', 19997, True, True, 5000, 5)
@@ -15,7 +15,7 @@ def connect():
     else:
         sys.exit('Failed connecting to remote API server')
 
-
+# Get an object handle from the scene
 def getHandle(client, objectID):
     retVal, handle = sim.simxGetObjectHandle(client, objectID, sim.simx_opmode_oneshot_wait)
     if retVal == 0:
@@ -24,57 +24,57 @@ def getHandle(client, objectID):
     else:
         sys.exit('Failed to get ' + objectID + ' handle')
 
-
+# Disconnects from the CoppeliaSim remote server
 def disconnect(client):
     sim.simxFinish(client)
 
-
+# Sets the robot's wheel speeds
 def move(client, leftMotor, leftSpeed, rightMotor, rightSpeed):
     retLeft = sim.simxSetJointTargetVelocity(client, leftMotor, leftSpeed, sim.simx_opmode_streaming)
     retRight = sim.simxSetJointTargetVelocity(client, rightMotor, rightSpeed, sim.simx_opmode_streaming)
     return retLeft | retRight
 
-
+# Sets the robot to move forward
 def moveForward(client, leftMotor, rightMotor, speed):
     retLeft = sim.simxSetJointTargetVelocity(client, leftMotor, speed, sim.simx_opmode_streaming)
     retRight = sim.simxSetJointTargetVelocity(client, rightMotor, speed, sim.simx_opmode_streaming)
     return retLeft | retRight
 
-
+# Sets the robot to move backwards
 def moveBackwards(client, leftMotor, rightMotor, speed):
     retLeft = sim.simxSetJointTargetVelocity(client, leftMotor, -speed, sim.simx_opmode_streaming)
     retRight = sim.simxSetJointTargetVelocity(client, rightMotor, -speed, sim.simx_opmode_streaming)
     return retLeft | retRight
 
-
+# Sets the robot to turn left
 def turnLeft(client, leftMotor, rightMotor, speed):
     retLeft = sim.simxSetJointTargetVelocity(client, leftMotor, -speed, sim.simx_opmode_streaming)
     retRight = sim.simxSetJointTargetVelocity(client, rightMotor, speed, sim.simx_opmode_streaming)
     return retLeft | retRight
 
-
+# Sets the robot to turn right
 def turnRight(client, leftMotor, rightMotor, speed):
     retLeft = sim.simxSetJointTargetVelocity(client, leftMotor, speed, sim.simx_opmode_streaming)
     retRight = sim.simxSetJointTargetVelocity(client, rightMotor, -speed, sim.simx_opmode_streaming)
     return retLeft | retRight
 
-
+# Stops the robot
 def stop(client, leftMotor, rightMotor):
     retLeft = sim.simxSetJointTargetVelocity(client, leftMotor, 0, sim.simx_opmode_oneshot_wait)
     retRight = sim.simxSetJointTargetVelocity(client, rightMotor, 0, sim.simx_opmode_oneshot_wait)
     return retLeft | retRight
 
-
+# Gets the position of an object in the scene
 def getPosition(client, handle):
     retVal, pos = sim.simxGetObjectPosition(client, handle, -1, sim.simx_opmode_oneshot_wait)
     return pos
 
-
+# Gets the rotation of an object in the scene
 def getRotation(client, handle):
     retVal, rot = sim.simxGetObjectOrientation(client, handle, -1, sim.simx_opmode_oneshot_wait)
     return rot
 
-
+# Gets the distance from the sensor reading
 def getDistanceFromSensor(client, sensor):
     return_code, detection_state, detected_point, detected_object_handle, detected_surface_normal_vector = sim.simxReadProximitySensor(client, sensor, sim.simx_opmode_oneshot_wait)
     if detection_state:
@@ -83,7 +83,7 @@ def getDistanceFromSensor(client, sensor):
         dist = np.inf
     return dist
 
-
+# Checks if the two point are close one another
 def isApproximatePosition(source, dest, error):
     retVal = True;
     # We only care about XY surface position
@@ -91,18 +91,18 @@ def isApproximatePosition(source, dest, error):
     retVal = retVal & (abs(source[1] - dest[1]) < error)
     return retVal
 
-
+# Checks if the two rotations are close one another
 def isApproximateRotation(source, dest, error):
     return abs(source - dest) < error
 
-
+# Normalizes the angle to be between 0 and 2pi
 def normalizeAngle(angle):
     if (angle < 0):
         return angle + 2 * np.pi
     else:
         return angle
 
-
+# Rotates the robot until the desired angle is reached
 def rotateUntilAngle(client, robot, leftMotor, rightMotor, angle, speed = 0.2, error = 0.01):
     rot = getRotation(client, robot)
     # Decide which direction to turn
@@ -127,11 +127,11 @@ def rotateUntilAngle(client, robot, leftMotor, rightMotor, angle, speed = 0.2, e
             rot = getRotation(client, robot)
     stop(client, leftMotor, rightMotor)
 
-
+# Gets a desired angle that the source must be at to look at target
 def getDesiredRotation(source, target):
     return np.arctan2(target[1] - source[1], target[0] - source[0])
 
-
+# Rotates the robot toward a given target
 def rotateTowards(client, robot, leftMotor, rightMotor, destinationHandle):
     destPos = getPosition(client, destinationHandle)
     # Repeat rotation 3 times for better accuracy
@@ -147,12 +147,13 @@ def rotateTowards(client, robot, leftMotor, rightMotor, destinationHandle):
         desAngle = getDesiredRotation(robPos, destPos)
         rotateUntilAngle(client, robot, leftMotor, rightMotor, desAngle, speed, error)
 
-
+# Moves the robot forward for N seconds
 def moveForwardFor(client, leftMotor, rightMotor, speed, moveFor):
     time_end = time.time() + moveFor;
     while time.time() < time_end:
         moveForward(client, leftMotor, rightMotor, speed)
 
+# Makes the robot follow a wall until the robot has turned by 90 degrees
 def wallFollowRHS(client, robot, leftMotor, rightMotor, sensor, speed):
     dist = getDistanceFromSensor(client, sensor)
     rotCoords = getRotation(client, robot)
@@ -183,7 +184,7 @@ def wallFollowRHS(client, robot, leftMotor, rightMotor, sensor, speed):
             sumRotDelta = sumRotDelta + deltaRot
     stop(client, leftMotor, rightMotor)
 
-
+# Makes the robot follow a wall until the robot reached the destination line or has turned by 360 degrees
 def wallFollowRHS2(client, robot, leftMotor, rightMotor, sensor, speed, destPos, robPos):
     dist = getDistanceFromSensor(client, sensor)
     rotCoords = getRotation(client, robot)
@@ -191,17 +192,17 @@ def wallFollowRHS2(client, robot, leftMotor, rightMotor, sensor, speed, destPos,
     prevRot = 0
     sumRotDelta = 0
     degrees = np.pi * 2
-    halfSpeed = speed / 3
+    halfSpeed = speed / 2
     leftSpeed = speed
     rightSpeed = halfSpeed
     delta = 0
     prevDist = dist
     times = 0
     while sumRotDelta > -degrees and sumRotDelta < degrees:
-        if (dist < 0.08): # 0.08
+        if (dist < 0.04): # 0.08
             leftSpeed = halfSpeed
             rightSpeed = speed
-        elif (dist > 0.1):
+        elif (dist > 0.06):
             leftSpeed = speed
             rightSpeed = halfSpeed
         if times > 20:
@@ -209,7 +210,6 @@ def wallFollowRHS2(client, robot, leftMotor, rightMotor, sensor, speed, destPos,
                 print('Distance to line < 0.01')
                 break
         times += 1
-
         move(client, leftMotor, leftSpeed, rightMotor, rightSpeed)
         dist = getDistanceFromSensor(client, sensor)
         prevDist = dist
@@ -219,10 +219,9 @@ def wallFollowRHS2(client, robot, leftMotor, rightMotor, sensor, speed, destPos,
         prevRot = rot
         if (deltaRot < 0.1):
             sumRotDelta = sumRotDelta + deltaRot
-
     stop(client, leftMotor, rightMotor)
 
-
+# Makes the robot reach destination1 by using the bug0 algorithm
 def bug0(client, robot, leftMotor, rightMotor, sensors, minWallDist = 0.15):
     print('BUG0 - started.')
     destHandle = getHandle(client, 'destination1')
@@ -259,10 +258,10 @@ def bug0(client, robot, leftMotor, rightMotor, sensors, minWallDist = 0.15):
     stop(client, leftMotor, rightMotor)
     print('BUG0 - destination reached!')
 
-
+# Makes the robot reach destination1 by using the bug2 algorithm
 def bug2(client, robot, leftMotor, rightMotor, sensors, minWallDist = 0.15):
     print('BUG2 - started.')
-    destHandle = getHandle(client, 'destination1')
+    destHandle = getHandle(client, 'destination3')
     criticalDist = minWallDist / 3
     destPos = getPosition(client, destHandle)
     robPos = getPosition(client, robot)
@@ -296,7 +295,7 @@ def bug2(client, robot, leftMotor, rightMotor, sensors, minWallDist = 0.15):
     stop(client, leftMotor, rightMotor)
     print('BUG2 - destination reached!')
 
-
+# Calculates the distance towards the target line
 def distanceToLine(p0, initialPosition_, desiredPosition_):
     # p0 is the current position
     # p1 and p2 points define the line
@@ -308,10 +307,9 @@ def distanceToLine(p0, initialPosition_, desiredPosition_):
     up_eq = math.fabs((p2[1] - p1[1]) * p0[0] - (p2[0] - p1[0]) * p0[1] + (p2[0] * p1[1]) - (p2[1] * p1[0]))
     lo_eq = math.sqrt(pow(p2[1] - p1[1], 2) + pow(p2[0] - p1[0], 2))
     distance = up_eq / lo_eq
-    print(distance)
     return distance
 
-
+# Corrects the angle to be between -pi and pi
 def correctAngle(angle):
     if (angle > np.pi):
         return angle - 2 * np.pi
@@ -320,11 +318,11 @@ def correctAngle(angle):
     else:
         return angle
 
-
+# Checks if the two given values are approximate to one another
 def isApproximate(val1, val2, error = 0.1):
     return (np.abs(val1 - val2)) < error
 
-
+# Turns the robot by 90 degrees or turns the robot to face these angles (0, 90, 180, 270)
 def turn90Degrees(client, robot, leftMotor, rightMotor, direction, speed = 0.2):
     stop(client, leftMotor, rightMotor)
     rot = getRotation(client, robot)
@@ -348,7 +346,7 @@ def turn90Degrees(client, robot, leftMotor, rightMotor, direction, speed = 0.2):
         else:
             rotateUntilAngle(client, robot, leftMotor, rightMotor, -deg90)
 
-
+# Makes the robot to complete the maze using the right hand side algorithm
 def maze(client, robot, leftMotor, rightMotor, frontSensor, rightSensor, leftSensor):
     print('Maze by right hand rule - started')
     stop(client, leftMotor, rightMotor)
@@ -393,9 +391,7 @@ def main():
         sensor = getHandle(clientID, 'Pioneer_p3dx_ultrasonicSensor' + str(i + 1))
         sensors.append(sensor)
     stop(clientID, leftMotor, rightMotor)
-    # bug0(clientID, robot, leftMotor, rightMotor, sensors)
-    # stop(clientID, leftMotor, rightMotor)
-    bug2(clientID, robot, leftMotor, rightMotor, sensors)
+    bug0(clientID, robot, leftMotor, rightMotor, sensors)
     stop(clientID, leftMotor, rightMotor)
     rotateUntilAngle(clientID, robot, leftMotor, rightMotor, np.pi, 0.1, 0.005)
     destPos = [2.5, 8, 0]
@@ -408,8 +404,9 @@ def main():
     stop(clientID, leftMotor, rightMotor)
     moveForwardFor(clientID, leftMotor, rightMotor, 2, 8)
     stop(clientID, leftMotor, rightMotor)
+    bug2(clientID, robot, leftMotor, rightMotor, sensors)
+    stop(clientID, leftMotor, rightMotor)
     disconnect(clientID)
-
 
 if __name__ == "__main__":
     main()

@@ -3,6 +3,7 @@ import sys
 import time
 import numpy as np
 import matplotlib.pyplot as plt
+import math
 
 
 def connect():
@@ -183,6 +184,45 @@ def wallFollowRHS(client, robot, leftMotor, rightMotor, sensor, speed):
     stop(client, leftMotor, rightMotor)
 
 
+def wallFollowRHS2(client, robot, leftMotor, rightMotor, sensor, speed, destPos, robPos):
+    dist = getDistanceFromSensor(client, sensor)
+    rotCoords = getRotation(client, robot)
+    rot = normalizeAngle(rotCoords[2])
+    prevRot = 0
+    sumRotDelta = 0
+    degrees = np.pi * 2
+    halfSpeed = speed / 3
+    leftSpeed = speed
+    rightSpeed = halfSpeed
+    delta = 0
+    prevDist = dist
+    times = 0
+    while sumRotDelta > -degrees and sumRotDelta < degrees:
+        if (dist < 0.08): # 0.08
+            leftSpeed = halfSpeed
+            rightSpeed = speed
+        elif (dist > 0.1):
+            leftSpeed = speed
+            rightSpeed = halfSpeed
+        if times > 20:
+            if distanceToLine(getPosition(client, robot), destPos, robPos) < 0.01:
+                print('Distance to line < 0.01')
+                break
+        times += 1
+
+        move(client, leftMotor, leftSpeed, rightMotor, rightSpeed)
+        dist = getDistanceFromSensor(client, sensor)
+        prevDist = dist
+        rotCoords = getRotation(client, robot)
+        rot = normalizeAngle(rotCoords[2])
+        deltaRot = rot - prevRot
+        prevRot = rot
+        if (deltaRot < 0.1):
+            sumRotDelta = sumRotDelta + deltaRot
+
+    stop(client, leftMotor, rightMotor)
+
+
 def bug0(client, robot, leftMotor, rightMotor, sensors, minWallDist = 0.15):
     print('BUG0 - started.')
     destHandle = getHandle(client, 'destination1')
@@ -218,6 +258,58 @@ def bug0(client, robot, leftMotor, rightMotor, sensors, minWallDist = 0.15):
         robPos = getPosition(client, robot)
     stop(client, leftMotor, rightMotor)
     print('BUG0 - destination reached!')
+
+
+def bug2(client, robot, leftMotor, rightMotor, sensors, minWallDist = 0.15):
+    print('BUG2 - started.')
+    destHandle = getHandle(client, 'destination1')
+    criticalDist = minWallDist / 3
+    destPos = getPosition(client, destHandle)
+    robPos = getPosition(client, robot)
+    rotateTowards(client, robot, leftMotor, rightMotor, destHandle)
+    while not isApproximatePosition(robPos, destPos, 0.05):
+        dist1 = getDistanceFromSensor(client, sensors[3])
+        dist2 = getDistanceFromSensor(client, sensors[4])
+        if (dist1 < minWallDist and dist2 < minWallDist) or dist1 < criticalDist or dist2 < criticalDist:
+            # rotate left
+            prevDist1 = np.inf
+            prevDist2 = np.inf
+            sensDist1 = getDistanceFromSensor(client, sensors[7])
+            sensDist2 = getDistanceFromSensor(client, sensors[8])
+            print('rotating left')
+            diff = np.abs(sensDist1 - sensDist2)
+            while sensDist2 == np.inf or sensDist1 < prevDist1 or sensDist2 < prevDist2:
+                turnLeft(client, leftMotor, rightMotor, 1)
+                prevDist1 = sensDist1
+                sensDist1 = getDistanceFromSensor(client, sensors[7])
+                prevDist2 = sensDist2
+                sensDist2 = getDistanceFromSensor(client, sensors[8])
+                diff = np.abs(sensDist1 - sensDist2)
+            print('moving until no obstacle')
+            wallFollowRHS2(client, robot, leftMotor, rightMotor, sensors[7], 1.5, destPos, robPos)
+            stop(client, leftMotor, rightMotor)
+            # rotate towards target
+            print('rotating towards target')
+            rotateTowards(client, robot, leftMotor, rightMotor, destHandle)
+        moveForward(client, leftMotor, rightMotor, 1.5)
+        robPos = getPosition(client, robot)
+    stop(client, leftMotor, rightMotor)
+    print('BUG2 - destination reached!')
+
+
+def distanceToLine(p0, initialPosition_, desiredPosition_):
+    # p0 is the current position
+    # p1 and p2 points define the line
+    # initialPosition_ pradine pos
+    # desiredPosition_ galutine pos
+    p1 = initialPosition_
+    p2 = desiredPosition_
+    # here goes the equation
+    up_eq = math.fabs((p2[1] - p1[1]) * p0[0] - (p2[0] - p1[0]) * p0[1] + (p2[0] * p1[1]) - (p2[1] * p1[0]))
+    lo_eq = math.sqrt(pow(p2[1] - p1[1], 2) + pow(p2[0] - p1[0], 2))
+    distance = up_eq / lo_eq
+    print(distance)
+    return distance
 
 
 def correctAngle(angle):
@@ -301,7 +393,9 @@ def main():
         sensor = getHandle(clientID, 'Pioneer_p3dx_ultrasonicSensor' + str(i + 1))
         sensors.append(sensor)
     stop(clientID, leftMotor, rightMotor)
-    bug0(clientID, robot, leftMotor, rightMotor, sensors)
+    # bug0(clientID, robot, leftMotor, rightMotor, sensors)
+    # stop(clientID, leftMotor, rightMotor)
+    bug2(clientID, robot, leftMotor, rightMotor, sensors)
     stop(clientID, leftMotor, rightMotor)
     rotateUntilAngle(clientID, robot, leftMotor, rightMotor, np.pi, 0.1, 0.005)
     destPos = [2.5, 8, 0]

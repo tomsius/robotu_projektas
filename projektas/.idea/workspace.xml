@@ -2,8 +2,10 @@
 <project version="4">
   <component name="ChangeListManager">
     <list default="true" id="80716a1f-dac4-416f-9dcf-ec28967c03c2" name="Default Changelist" comment="">
-      <change beforePath="$PROJECT_DIR$/../Ataskaita.docx" beforeDir="false" afterPath="$PROJECT_DIR$/../Ataskaita.docx" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/misc.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/misc.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/.idea/projektas.iml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/projektas.iml" afterDir="false" />
       <change beforePath="$PROJECT_DIR$/.idea/workspace.xml" beforeDir="false" afterPath="$PROJECT_DIR$/.idea/workspace.xml" afterDir="false" />
+      <change beforePath="$PROJECT_DIR$/projektas.py" beforeDir="false" afterPath="$PROJECT_DIR$/projektas.py" afterDir="false" />
     </list>
     <option name="SHOW_DIALOG" value="false" />
     <option name="HIGHLIGHT_CONFLICTS" value="true" />
@@ -13,15 +15,16 @@
   <component name="Git.Settings">
     <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$/.." />
   </component>
+  <component name="JupyterTrust" id="ccb0077b-9e27-461c-8792-e279cc976b12" />
   <component name="ProjectId" id="1jEtoxPkIwAKjJ7EHDLYLOxfxqi" />
   <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
   <component name="ProjectViewState">
     <option name="hideEmptyMiddlePackages" value="true" />
-    <option name="showExcludedFiles" value="true" />
     <option name="showLibraryContents" value="true" />
   </component>
   <component name="PropertiesComponent">
     <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="WebServerToolWindowFactoryState" value="false" />
     <property name="last_opened_file_path" value="$PROJECT_DIR$" />
     <property name="settings.editor.selected.configurable" value="vcs.Git" />
   </component>
@@ -38,6 +41,7 @@
       <option name="IS_MODULE_SDK" value="true" />
       <option name="ADD_CONTENT_ROOTS" value="true" />
       <option name="ADD_SOURCE_ROOTS" value="true" />
+      <EXTENSION ID="PythonCoverageRunConfigurationExtension" runner="coverage.py" />
       <option name="SCRIPT_NAME" value="$PROJECT_DIR$/projektas.py" />
       <option name="PARAMETERS" value="" />
       <option name="SHOW_COMMAND_LINE" value="false" />
@@ -53,6 +57,7 @@
       </list>
     </recent_temporary>
   </component>
+  <component name="SpellCheckerSettings" RuntimeDictionaries="0" Folders="0" CustomDictionaries="0" DefaultDictionary="application-level" UseSingleDictionary="true" transferred="true" />
   <component name="SvnConfiguration">
     <configuration />
   </component>
@@ -63,50 +68,63 @@
       <option name="number" value="Default" />
       <option name="presentableId" value="Default" />
       <updated>1603381257527</updated>
+      <workItem from="1607525363190" duration="25679000" />
+      <workItem from="1607586923817" duration="4057000" />
     </task>
     <servers />
+  </component>
+  <component name="TypeScriptGeneratedFilesManager">
+    <option name="version" value="3" />
   </component>
   <component name="WindowStateProjectService">
     <state x="1152" y="495" key="FileChooserDialogImpl" timestamp="1603381394006">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
     <state x="1152" y="495" key="FileChooserDialogImpl/0.0.2560.1400/-1920.450.1920.1040@0.0.2560.1400" timestamp="1603381394006" />
-    <state width="1899" height="263" key="GridCell.Tab.0.bottom" timestamp="1607414078063">
-      <screen x="-1920" y="450" width="1920" height="1040" />
+    <state width="1637" height="280" key="GridCell.Tab.0.bottom" timestamp="1607591384327">
+      <screen x="0" y="0" width="1680" height="1010" />
     </state>
     <state width="1899" height="263" key="GridCell.Tab.0.bottom/0.0.2560.1400/-1920.450.1920.1040@-1920.450.1920.1040" timestamp="1607414078063" />
     <state width="1635" height="286" key="GridCell.Tab.0.bottom/0.0.2560.1400/-1920.450.1920.1040@0.0.2560.1400" timestamp="1606935816788" />
-    <state width="1899" height="263" key="GridCell.Tab.0.center" timestamp="1607414078063">
-      <screen x="-1920" y="450" width="1920" height="1040" />
+    <state width="1637" height="280" key="GridCell.Tab.0.bottom/1680.32.1280.984/0.0.1680.1010@0.0.1680.1010" timestamp="1607591384327" />
+    <state width="1637" height="280" key="GridCell.Tab.0.center" timestamp="1607591384327">
+      <screen x="0" y="0" width="1680" height="1010" />
     </state>
     <state width="1899" height="263" key="GridCell.Tab.0.center/0.0.2560.1400/-1920.450.1920.1040@-1920.450.1920.1040" timestamp="1607414078063" />
     <state width="1635" height="286" key="GridCell.Tab.0.center/0.0.2560.1400/-1920.450.1920.1040@0.0.2560.1400" timestamp="1606935816788" />
-    <state width="1899" height="263" key="GridCell.Tab.0.left" timestamp="1607414078063">
-      <screen x="-1920" y="450" width="1920" height="1040" />
+    <state width="1637" height="280" key="GridCell.Tab.0.center/1680.32.1280.984/0.0.1680.1010@0.0.1680.1010" timestamp="1607591384327" />
+    <state width="1637" height="280" key="GridCell.Tab.0.left" timestamp="1607591384327">
+      <screen x="0" y="0" width="1680" height="1010" />
     </state>
     <state width="1899" height="263" key="GridCell.Tab.0.left/0.0.2560.1400/-1920.450.1920.1040@-1920.450.1920.1040" timestamp="1607414078063" />
     <state width="1635" height="286" key="GridCell.Tab.0.left/0.0.2560.1400/-1920.450.1920.1040@0.0.2560.1400" timestamp="1606935816788" />
-    <state width="1899" height="263" key="GridCell.Tab.0.right" timestamp="1607414078063">
-      <screen x="-1920" y="450" width="1920" height="1040" />
+    <state width="1637" height="280" key="GridCell.Tab.0.left/1680.32.1280.984/0.0.1680.1010@0.0.1680.1010" timestamp="1607591384327" />
+    <state width="1637" height="280" key="GridCell.Tab.0.right" timestamp="1607591384327">
+      <screen x="0" y="0" width="1680" height="1010" />
     </state>
     <state width="1899" height="263" key="GridCell.Tab.0.right/0.0.2560.1400/-1920.450.1920.1040@-1920.450.1920.1040" timestamp="1607414078063" />
     <state width="1635" height="286" key="GridCell.Tab.0.right/0.0.2560.1400/-1920.450.1920.1040@0.0.2560.1400" timestamp="1606935816788" />
-    <state width="1635" height="286" key="GridCell.Tab.1.bottom" timestamp="1606935816788">
-      <screen x="0" y="0" width="2560" height="1400" />
+    <state width="1637" height="280" key="GridCell.Tab.0.right/1680.32.1280.984/0.0.1680.1010@0.0.1680.1010" timestamp="1607591384327" />
+    <state width="1637" height="336" key="GridCell.Tab.1.bottom" timestamp="1607553004974">
+      <screen x="0" y="0" width="1680" height="1010" />
     </state>
     <state width="1635" height="286" key="GridCell.Tab.1.bottom/0.0.2560.1400/-1920.450.1920.1040@0.0.2560.1400" timestamp="1606935816788" />
-    <state width="1635" height="286" key="GridCell.Tab.1.center" timestamp="1606935816788">
-      <screen x="0" y="0" width="2560" height="1400" />
+    <state width="1637" height="336" key="GridCell.Tab.1.bottom/1680.32.1280.984/0.0.1680.1010@0.0.1680.1010" timestamp="1607553004974" />
+    <state width="1637" height="336" key="GridCell.Tab.1.center" timestamp="1607553004974">
+      <screen x="0" y="0" width="1680" height="1010" />
     </state>
     <state width="1635" height="286" key="GridCell.Tab.1.center/0.0.2560.1400/-1920.450.1920.1040@0.0.2560.1400" timestamp="1606935816788" />
-    <state width="1635" height="286" key="GridCell.Tab.1.left" timestamp="1606935816788">
-      <screen x="0" y="0" width="2560" height="1400" />
+    <state width="1637" height="336" key="GridCell.Tab.1.center/1680.32.1280.984/0.0.1680.1010@0.0.1680.1010" timestamp="1607553004974" />
+    <state width="1637" height="336" key="GridCell.Tab.1.left" timestamp="1607553004974">
+      <screen x="0" y="0" width="1680" height="1010" />
     </state>
     <state width="1635" height="286" key="GridCell.Tab.1.left/0.0.2560.1400/-1920.450.1920.1040@0.0.2560.1400" timestamp="1606935816788" />
-    <state width="1635" height="286" key="GridCell.Tab.1.right" timestamp="1606935816788">
-      <screen x="0" y="0" width="2560" height="1400" />
+    <state width="1637" height="336" key="GridCell.Tab.1.left/1680.32.1280.984/0.0.1680.1010@0.0.1680.1010" timestamp="1607553004974" />
+    <state width="1637" height="336" key="GridCell.Tab.1.right" timestamp="1607553004974">
+      <screen x="0" y="0" width="1680" height="1010" />
     </state>
     <state width="1635" height="286" key="GridCell.Tab.1.right/0.0.2560.1400/-1920.450.1920.1040@0.0.2560.1400" timestamp="1606935816788" />
+    <state width="1637" height="336" key="GridCell.Tab.1.right/1680.32.1280.984/0.0.1680.1010@0.0.1680.1010" timestamp="1607553004974" />
     <state x="873" y="383" key="SettingsEditor" timestamp="1603381398333">
       <screen x="0" y="0" width="2560" height="1400" />
     </state>
@@ -116,5 +134,8 @@
     </state>
     <state x="-1119" y="870" key="com.intellij.ide.util.TipDialog/0.0.2560.1400/-1920.450.1920.1040@-1920.450.1920.1040" timestamp="1607409928604" />
     <state x="1068" y="565" key="com.intellij.ide.util.TipDialog/0.0.2560.1400/-1920.450.1920.1040@0.0.2560.1400" timestamp="1606984669018" />
+  </component>
+  <component name="com.intellij.coverage.CoverageDataManagerImpl">
+    <SUITE FILE_PATH="coverage/projektas_py$projektas.coverage" NAME="projektas Coverage Results" MODIFIED="1607590897768" SOURCE_PROVIDER="com.intellij.coverage.DefaultCoverageFileProvider" RUNNER="coverage.py" COVERAGE_BY_TEST_ENABLED="true" COVERAGE_TRACING_ENABLED="false" WORKING_DIRECTORY="$PROJECT_DIR$" />
   </component>
 </project>
